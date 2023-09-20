@@ -15,7 +15,7 @@ func main() {
 	dataUpdaters := []DataUpdater{
 		{Command: DPMS, Channel: make(chan string), Interval: 10 * time.Second},
 		{Command: KeyboardLayout, Channel: make(chan string), Interval: 1 * time.Second},
-		{Command: IP, Channel: make(chan string), Interval: 600 * time.Second},
+		{Command: ExternalIP, Channel: make(chan string), Interval: 600 * time.Second},
 		{Command: Clock, Channel: make(chan string), Interval: 60 * time.Second},
 	}
 

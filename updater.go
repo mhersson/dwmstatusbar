@@ -20,7 +20,7 @@ func updateData(updater DataUpdater) {
 }
 
 func receive(dataUpdaters []DataUpdater) {
-	var dpms, layout, ip, clock string
+	var dpms, layout, ipaddress, clock string
 
 	for {
 		select {
@@ -29,11 +29,13 @@ func receive(dataUpdaters []DataUpdater) {
 		case data := <-dataUpdaters[1].Channel:
 			layout = data
 		case data := <-dataUpdaters[2].Channel:
-			ip = data
+			ipaddress = data
 		case data := <-dataUpdaters[3].Channel:
 			clock = data
 		}
-		status := fmt.Sprintf("󰌵 %s | 󰌌 %s | 󱇱 %s |  %s", dpms, layout, ip, clock)
+
+		status := fmt.Sprintf("󰌵 %s | 󰌌 %s | 󱇱 %s |  %s", dpms, layout, ipaddress, clock)
+
 		if debug {
 			fmt.Println(status)
 		} else {

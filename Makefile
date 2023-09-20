@@ -4,6 +4,7 @@
 shell=bash
 
 GO_FUMPT_EXISTS := $(shell command -v gofumpt)
+GOLANGCI_LINT_EXISTS := $(shell command -v golangci-lint)
 
 LDFLAGS="-s -w"
 
@@ -27,12 +28,16 @@ help: ## display this help.
 
 
 vet:
-	go vet ./...
+ifdef GOLANGCI_LINT_EXISTS
+		@golangci-lint run
+else
+		@echo "Using go vet to check the code..."
+		@go vet ./...
+endif
 
 fmt:
 
 ifdef GO_FUMPT_EXISTS
-	@echo "Using gofumpt to format the code..."
 	@gofumpt -w .
 else
 	@echo "Using go fmt to format the code..."
@@ -40,5 +45,5 @@ else
 endif
 
 build: fmt vet ## build the code
-	go build -ldflags $(LDFLAGS)
+	@go build -ldflags $(LDFLAGS)
 

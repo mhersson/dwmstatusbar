@@ -1,0 +1,26 @@
+linters:
+  enable-all: true
+  disable:
+  - interfacer
+  - maligned
+  - scopelint
+  - golint
+  - forbidigo
+  - gomnd
+  - gochecknoinits
+  - gci
+  - depguard
+  - exhaustivestruct
+  - exhaustive
+  - exhaustruct
+  - gochecknoglobals
+  - godox
+  - gofumpt
+  # deprecated
+  - deadcode
+  - varcheck
+  - nosnakecase
+  - ifshort
+  # no generic support
+  - structcheck
+  - nolintlint

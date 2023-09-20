@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"io"
 	"log"
 	"net/http"
@@ -13,7 +14,7 @@ import (
 func ExecCommand(command string, args []string, shell bool) string {
 	cmd := exec.Command(command, args...)
 	if shell {
-		cmd = exec.Command("bash", "-c", strings.Join(append([]string{command}, args...), " "))
+		cmd = exec.Command("bash", "-c", command)
 	}
 
 	out, err := cmd.CombinedOutput()
@@ -26,31 +27,40 @@ func ExecCommand(command string, args []string, shell bool) string {
 
 func Clock() string {
 	t := time.Now()
+
 	return t.Format("Monday 2006-01-02 15:04")
 }
 
-func IP() string {
-	var ip []byte
+func ExternalIP() string {
+	var ipaddress []byte
 
-	resp, err := http.Get("https://icanhazip.com")
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "https://icanhazip.com", nil)
+	if err != nil {
+		log.Printf("failed to create request %s\n", err.Error())
+	}
+
+	client := &http.Client{}
+
+	resp, err := client.Do(req)
 	if err != nil {
 		log.Printf("failed to get external ip %s\n", err.Error())
 	}
 
 	defer resp.Body.Close()
 
-	ip, err = io.ReadAll(resp.Body)
+	ipaddress, err = io.ReadAll(resp.Body)
 	if err != nil {
 		log.Printf("failed to read external ip %s\n", err.Error())
 	}
 
-	return string(bytes.Trim(ip, "\n\r\t "))
+	return string(bytes.Trim(ipaddress, "\n\r\t "))
 }
 
-func KeyboardLayout() (layout string) {
-	layout = "US"
+func KeyboardLayout() string {
 	args := []string{"q"}
 	out := ExecCommand("xset", args, false)
+
+	layout := "US"
 
 	lines := strings.Split(out, "\n")
 	for _, line := range lines {
@@ -68,9 +78,11 @@ func KeyboardLayout() (layout string) {
 	return layout
 }
 
-func DPMS() (dpms string) {
+func DPMS() string {
 	args := []string{"q"}
 	out := ExecCommand("xset", args, false)
+
+	dpms := "DPMS ON"
 
 	lines := strings.Split(out, "\n")
 	for _, line := range lines {
