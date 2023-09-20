@@ -31,6 +31,13 @@ func Clock() string {
 	return t.Format("Monday 2006-01-02 15:04")
 }
 
+func PIA() string {
+	args := []string{"get", "vpnip"}
+	out := ExecCommand("piactl", args, false)
+
+	return strings.TrimSpace(out)
+}
+
 func ExternalIP() string {
 	var ipaddress []byte
 
