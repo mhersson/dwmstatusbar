@@ -20,8 +20,8 @@ type DataUpdater struct {
 	Command  func() string
 	Channel  chan string
 	Name     string
-	Data     string
 	Prefix   string
+	Data     string
 	Interval time.Duration
 	Enabled  bool
 }
@@ -33,7 +33,7 @@ var dataUpdaters = map[string]*DataUpdater{
 		Name:     dpms,
 		Data:     "",
 		Prefix:   "󰌵",
-		Interval: 10 * time.Second,
+		Interval: 1 * time.Second,
 		Enabled:  true,
 	},
 	layout: {
@@ -59,7 +59,7 @@ var dataUpdaters = map[string]*DataUpdater{
 		Channel:  make(chan string),
 		Name:     extip,
 		Data:     "",
-		Prefix:   "| 󱇱",
+		Prefix:   "| 󰅟",
 		Interval: 600 * time.Second,
 		Enabled:  true,
 	},
@@ -102,38 +102,17 @@ func receive(dataUpdaters map[string]*DataUpdater) {
 		for _, name := range printOrder {
 			updater := dataUpdaters[name]
 
-			if name == extip && dataUpdaters[vpn].Enabled {
+			if name == extip && updater.Data == dataUpdaters[vpn].Data {
+				if updater.Data != "" {
+					updater.Interval = 3600 * time.Second
+				}
+
 				continue
 			}
 
-			if name == vpn && updater.Enabled {
-				if dataUpdaters[extip].Enabled {
-					extipUpdater := dataUpdaters[extip]
-
-					// If vpn is enabled only check the external ip against icanhazip.com every hour
-					extipUpdater.Interval = 3600 * time.Second
-
-					// Check to verify that the external ip address reported by the vpn
-					// is actually the external ip address shown to the world. The use
-					// case appeared with a bug in PIA that caused the routing table to
-					// be renamed with a .pacsave extension on an Archlinux update,
-					// leaving PIA to report connected, but the connection was never
-					// used. Since the extip interval is set to 1 hour when vpn is
-					// enabled, this will stay on IP mismatch until a new external check
-					// is made in one hour
-					// TBD if this should be ignored and the extip should be disabled if
-					// vpn is enabled
-					if extipUpdater.Data != updater.Data && (extipUpdater.Data != "" && updater.Data != "") {
-						status += fmt.Sprintf("%s IP mismatch ", updater.Prefix)
-
-						continue
-					}
-				}
-			}
-
+			// status := fmt.Sprintf("󰌵 %s | 󰌌 %s | 󱇱 %s |  %s", dpms, layout, ipaddress, clock)
 			status += fmt.Sprintf("%s %s ", updater.Prefix, updater.Data)
 		}
-		// status := fmt.Sprintf("󰌵 %s | 󰌌 %s | 󱇱 %s |  %s", dpms, layout, ipaddress, clock)
 
 		if debug {
 			fmt.Println(status)

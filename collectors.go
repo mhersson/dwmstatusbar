@@ -96,9 +96,7 @@ func DPMS() string {
 		if strings.Contains(line, "DPMS is") {
 			fields := strings.Fields(line)
 			if len(fields) >= 3 {
-				if fields[2] == "Enabled" {
-					dpms = "DPMS ON"
-				} else {
+				if fields[2] != "Enabled" {
 					dpms = "DPMS OFF"
 				}
 			}
