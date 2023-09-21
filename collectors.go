@@ -22,6 +22,10 @@ func ExecCommand(command string, args []string, shell bool) string {
 		log.Printf("failed to execute command %s\n", err.Error())
 	}
 
+	if len(out) == 0 {
+		return "Waiting for data..."
+	}
+
 	return strings.TrimSpace(string(out))
 }
 
@@ -39,11 +43,11 @@ func PIA() string {
 }
 
 func ExternalIP() string {
-	var ipaddress []byte
-
 	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "https://icanhazip.com", nil)
 	if err != nil {
 		log.Printf("failed to create request %s\n", err.Error())
+
+		return ""
 	}
 
 	client := &http.Client{}
@@ -51,16 +55,20 @@ func ExternalIP() string {
 	resp, err := client.Do(req)
 	if err != nil {
 		log.Printf("failed to get external ip %s\n", err.Error())
+
+		return ""
 	}
 
 	defer resp.Body.Close()
 
-	ipaddress, err = io.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		log.Printf("failed to read external ip %s\n", err.Error())
+
+		return ""
 	}
 
-	return string(bytes.Trim(ipaddress, "\n\r\t "))
+	return string(bytes.Trim(body, "\n\r\t "))
 }
 
 func KeyboardLayout() string {

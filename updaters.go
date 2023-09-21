@@ -111,7 +111,9 @@ func receive(dataUpdaters map[string]*DataUpdater) {
 			}
 
 			// status := fmt.Sprintf("󰌵 %s | 󰌌 %s | 󱇱 %s |  %s", dpms, layout, ipaddress, clock)
-			status += fmt.Sprintf("%s %s ", updater.Prefix, updater.Data)
+			if updater.Data != "" {
+				status += fmt.Sprintf("%s %s ", updater.Prefix, updater.Data)
+			}
 		}
 
 		if debug {
