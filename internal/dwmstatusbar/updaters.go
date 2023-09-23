@@ -7,14 +7,15 @@ import (
 )
 
 const (
-	dpms   = "dpms"
-	layout = "layout"
-	vpn    = "vpn"
-	extip  = "extip"
-	clock  = "clock"
+	battery = "battery"
+	clock   = "clock"
+	dpms    = "dpms"
+	extip   = "extip"
+	layout  = "layout"
+	vpn     = "vpn"
 )
 
-var printOrder = []string{dpms, layout, vpn, extip, clock}
+var printOrder = []string{dpms, layout, vpn, extip, battery, clock}
 
 type DataUpdater struct {
 	Command  func() string
@@ -63,6 +64,15 @@ var dataUpdaters = map[string]*DataUpdater{
 		Interval: 600 * time.Second,
 		Enabled:  true,
 	},
+	battery: {
+		Command:  Battery,
+		Channel:  make(chan string),
+		Name:     battery,
+		Data:     "",
+		Prefix:   "|  ",
+		Interval: 60 * time.Second,
+		Enabled:  true,
+	},
 	clock: {
 		Command:  Clock,
 		Channel:  make(chan string),
@@ -75,11 +85,11 @@ var dataUpdaters = map[string]*DataUpdater{
 }
 
 func updateData(updater *DataUpdater) {
-	if !updater.Enabled {
-		return
-	}
-
 	for {
+		if !updater.Enabled {
+			return
+		}
+
 		data := updater.Command()
 		updater.Channel <- data
 		time.Sleep(updater.Interval)
@@ -90,17 +100,24 @@ func updateData(updater *DataUpdater) {
 func receive(dataUpdaters map[string]*DataUpdater) {
 	for {
 		select {
+		case dataUpdaters[battery].Data = <-dataUpdaters[battery].Channel:
+		case dataUpdaters[clock].Data = <-dataUpdaters[clock].Channel:
 		case dataUpdaters[dpms].Data = <-dataUpdaters[dpms].Channel:
+		case dataUpdaters[extip].Data = <-dataUpdaters[extip].Channel:
 		case dataUpdaters[layout].Data = <-dataUpdaters[layout].Channel:
 		case dataUpdaters[vpn].Data = <-dataUpdaters[vpn].Channel:
-		case dataUpdaters[extip].Data = <-dataUpdaters[extip].Channel:
-		case dataUpdaters[clock].Data = <-dataUpdaters[clock].Channel:
 		}
 
 		status := ""
 
 		for _, name := range printOrder {
 			updater := dataUpdaters[name]
+
+			if name == battery && updater.Data == "No Battery" {
+				updater.Enabled = false
+
+				continue
+			}
 
 			if name == extip && updater.Data == dataUpdaters[vpn].Data {
 				if updater.Data != "" {

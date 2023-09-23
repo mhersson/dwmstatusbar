@@ -5,6 +5,7 @@ go 1.21.1
 require (
 	github.com/onsi/ginkgo/v2 v2.12.1
 	github.com/onsi/gomega v1.27.10
+	github.com/spf13/afero v1.10.0
 	github.com/stretchr/testify v1.8.4
 )
 

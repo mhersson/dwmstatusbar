@@ -10,6 +10,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/ghttp"
+	"github.com/spf13/afero"
 )
 
 const xsetOutput = `
@@ -41,6 +42,36 @@ DPMS (Display Power Management Signaling):
   DPMS is Disabled
   Monitor is On
 `
+
+var TestBattery = Describe("Battery", func() {
+	var fs afero.Fs
+
+	BeforeEach(func() {
+		fs = afero.NewMemMapFs()
+		fs.MkdirAll("/sys/class/power_supply/BAT0", 0o755)
+		afero.WriteFile(fs, "/sys/class/power_supply/BAT0/capacity", []byte("100"), 0o644)
+		afero.WriteFile(fs, "/sys/class/power_supply/BAT0/status", []byte("Discharging"), 0o644)
+		dwmstatusbar.Fsys = fs
+	})
+
+	Context("when the battery is present", func() {
+		It("returns the battery level with a percent sign", func() {
+			Expect(dwmstatusbar.Battery()).To(Equal("100%"))
+		})
+
+		It("says Charging when charging", func() {
+			afero.WriteFile(fs, "/sys/class/power_supply/BAT0/status", []byte("Charging"), 0o644)
+			Expect(dwmstatusbar.Battery()).To(Equal("Charging"))
+		})
+	})
+
+	Context("when the battery is not present", func() {
+		It("returns No Battery", func() {
+			fs.RemoveAll("/sys/class/power_supply/BAT0")
+			Expect(dwmstatusbar.Battery()).To(Equal("No Battery"))
+		})
+	})
+})
 
 var TestPIA = Describe("PIA", func() {
 	var (

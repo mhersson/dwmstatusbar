@@ -8,9 +8,9 @@ import (
 	"os/exec"
 	"strings"
 	"time"
-)
 
-var ExternalIPURL = "https://icanhazip.com"
+	"github.com/spf13/afero"
+)
 
 type CmdInterface interface {
 	CombinedOutput() ([]byte, error)
@@ -54,6 +54,33 @@ func ExecCommand(command string, args []string, shell bool) string {
 	}
 
 	return strings.TrimSpace(string(out))
+}
+
+func Battery() string {
+	const (
+		noBattery = "No Battery"
+		charging  = "Charging"
+	)
+
+	if exists, _ := afero.DirExists(Fsys, "/sys/class/power_supply/BAT0"); exists {
+		status, err := afero.ReadFile(Fsys, "/sys/class/power_supply/BAT0/status")
+		if err != nil {
+			return noBattery
+		}
+
+		if string(bytes.TrimSpace(status)) == charging {
+			return charging
+		}
+
+		battery, err := afero.ReadFile(Fsys, "/sys/class/power_supply/BAT0/capacity")
+		if err != nil {
+			return noBattery
+		}
+
+		return string(bytes.TrimSpace(battery)) + "%"
+	}
+
+	return noBattery
 }
 
 func Clock() string {
