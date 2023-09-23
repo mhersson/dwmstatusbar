@@ -24,3 +24,19 @@ linters:
   # no generic support
   - structcheck
   - nolintlint
+
+issues:
+  exclude-rules:
+  # Exclude some linters from running on tests files.
+  - path: _test\.go
+    linters:
+    - dupl
+    - errcheck
+    - gocyclo
+    - paralleltest
+    - tparallel
+    - goerr113
+    - goconst
+    - gosec
+    - lll
+    - varnamelen

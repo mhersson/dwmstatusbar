@@ -26,6 +26,8 @@ all: build
 help: ## display this help.
 	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_0-9-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
 
+test: ## run tests
+	@go test -v ./... --coverprofile=cover.out
 
 vet:
 ifdef GOLANGCI_LINT_EXISTS
@@ -44,6 +46,6 @@ else
 	@go fmt ./...
 endif
 
-build: fmt vet ## build the code
-	@go build -ldflags $(LDFLAGS)
+build: fmt vet test ## build the code
+	@go build -ldflags $(LDFLAGS) -o bin/dwmstatusbar
 

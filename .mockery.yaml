@@ -1,0 +1,8 @@
+with-expecter: true
+outpkg: mocks
+dir: "mocks"
+packages:
+  github.com/mhersson/dwmstatusbar/internal/dwmstatusbar:
+    interfaces:
+      CmdInterface:
+      ExecInterface:

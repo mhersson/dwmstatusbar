@@ -2,6 +2,8 @@ package main
 
 import (
 	"os"
+
+	"github.com/mhersson/dwmstatusbar/internal/dwmstatusbar"
 )
 
 var debug = false
@@ -11,11 +13,5 @@ func main() {
 		debug = true
 	}
 
-	for _, updater := range dataUpdaters {
-		go updateData(updater)
-	}
-
-	go receive(dataUpdaters)
-
-	select {}
+	dwmstatusbar.Run(debug)
 }

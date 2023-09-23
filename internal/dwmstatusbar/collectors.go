@@ -1,29 +1,56 @@
-package main
+package dwmstatusbar
 
 import (
 	"bytes"
 	"context"
 	"io"
-	"log"
 	"net/http"
 	"os/exec"
 	"strings"
 	"time"
 )
 
-func ExecCommand(command string, args []string, shell bool) string {
+var ExternalIPURL = "https://icanhazip.com"
+
+type CmdInterface interface {
+	CombinedOutput() ([]byte, error)
+}
+
+type Cmd struct {
+	Cmd *exec.Cmd
+}
+
+func (c *Cmd) CombinedOutput() ([]byte, error) {
+	return c.Cmd.CombinedOutput() //nolint:wrapcheck
+}
+
+type Exec struct{}
+
+func (e *Exec) NewCommand(command string, args ...string) CmdInterface { //nolint:ireturn
 	cmd := exec.Command(command, args...)
+
+	return &Cmd{Cmd: cmd}
+}
+
+type ExecInterface interface {
+	NewCommand(command string, args ...string) CmdInterface
+}
+
+var ExecCmd ExecInterface = &Exec{}
+
+func ExecCommand(command string, args []string, shell bool) string {
+	cmd := ExecCmd.NewCommand(command, args...)
 	if shell {
-		cmd = exec.Command("bash", "-c", command)
+		cmd = ExecCmd.NewCommand("bash", "-c", command)
 	}
 
 	out, err := cmd.CombinedOutput()
 	if err != nil {
-		log.Printf("failed to execute command %s\n", err.Error())
+		Log.Printf("failed to execute command %s\n", err.Error())
 	}
 
 	if len(out) == 0 {
-		return "Waiting for data..."
+		return "No Data"
 	}
 
 	return strings.TrimSpace(string(out))
@@ -43,9 +70,9 @@ func PIA() string {
 }
 
 func ExternalIP() string {
-	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "https://icanhazip.com", nil)
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, ExternalIPURL, nil)
 	if err != nil {
-		log.Printf("failed to create request %s\n", err.Error())
+		Log.Printf("failed to create request %s\n", err.Error())
 
 		return ""
 	}
@@ -54,7 +81,7 @@ func ExternalIP() string {
 
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Printf("failed to get external ip %s\n", err.Error())
+		Log.Printf("failed to get external ip %s\n", err.Error())
 
 		return ""
 	}
@@ -63,7 +90,7 @@ func ExternalIP() string {
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		log.Printf("failed to read external ip %s\n", err.Error())
+		Log.Printf("failed to read external ip %s\n", err.Error())
 
 		return ""
 	}
