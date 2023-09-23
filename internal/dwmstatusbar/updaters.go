@@ -13,21 +13,32 @@ const (
 	extip   = "extip"
 	layout  = "layout"
 	vpn     = "vpn"
+	xset    = "xset"
 )
 
 var printOrder = []string{dpms, layout, vpn, extip, battery, clock}
 
 type DataUpdater struct {
-	Command  func() string
+	Command  func(string) string
 	Channel  chan string
 	Name     string
 	Prefix   string
 	Data     string
+	OldData  string
+	Parent   string
 	Interval time.Duration
 	Enabled  bool
 }
 
 var dataUpdaters = map[string]*DataUpdater{
+	xset: {
+		Command:  Xset,
+		Channel:  make(chan string),
+		Name:     xset,
+		Data:     "",
+		Interval: 1 * time.Second,
+		Enabled:  true,
+	},
 	dpms: {
 		Command:  DPMS,
 		Channel:  make(chan string),
@@ -36,6 +47,7 @@ var dataUpdaters = map[string]*DataUpdater{
 		Prefix:   "󰌵",
 		Interval: 1 * time.Second,
 		Enabled:  true,
+		Parent:   xset,
 	},
 	layout: {
 		Command:  KeyboardLayout,
@@ -45,6 +57,7 @@ var dataUpdaters = map[string]*DataUpdater{
 		Prefix:   "| 󰌌",
 		Interval: 1 * time.Second,
 		Enabled:  true,
+		Parent:   xset,
 	},
 	vpn: {
 		Command:  PIA,
@@ -90,8 +103,19 @@ func updateData(updater *DataUpdater) {
 			return
 		}
 
-		data := updater.Command()
-		updater.Channel <- data
+		var data string
+
+		if updater.Parent != "" {
+			data = updater.Command(dataUpdaters[updater.Parent].Data)
+		} else {
+			data = updater.Command("")
+		}
+
+		if updater.OldData != data {
+			updater.Channel <- data
+			updater.OldData = data
+		}
+
 		time.Sleep(updater.Interval)
 	}
 }
@@ -106,6 +130,7 @@ func receive(dataUpdaters map[string]*DataUpdater) {
 		case dataUpdaters[extip].Data = <-dataUpdaters[extip].Channel:
 		case dataUpdaters[layout].Data = <-dataUpdaters[layout].Channel:
 		case dataUpdaters[vpn].Data = <-dataUpdaters[vpn].Channel:
+		case dataUpdaters[xset].Data = <-dataUpdaters[xset].Channel:
 		}
 
 		status := ""

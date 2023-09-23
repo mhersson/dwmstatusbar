@@ -56,19 +56,19 @@ var TestBattery = Describe("Battery", func() {
 
 	Context("when the battery is present", func() {
 		It("returns the battery level with a percent sign", func() {
-			Expect(dwmstatusbar.Battery()).To(Equal("100%"))
+			Expect(dwmstatusbar.Battery("")).To(Equal("100%"))
 		})
 
 		It("says Charging when charging", func() {
 			afero.WriteFile(fs, "/sys/class/power_supply/BAT0/status", []byte("Charging"), 0o644)
-			Expect(dwmstatusbar.Battery()).To(Equal("Charging"))
+			Expect(dwmstatusbar.Battery("")).To(Equal("Charging"))
 		})
 	})
 
 	Context("when the battery is not present", func() {
 		It("returns No Battery", func() {
 			fs.RemoveAll("/sys/class/power_supply/BAT0")
-			Expect(dwmstatusbar.Battery()).To(Equal("No Battery"))
+			Expect(dwmstatusbar.Battery("")).To(Equal("No Battery"))
 		})
 	})
 })
@@ -90,7 +90,7 @@ var TestPIA = Describe("PIA", func() {
 		It("returns the IP address", func() {
 			execMock.On("NewCommand", "piactl", "get", "vpnip").Return(cmdMock)
 			cmdMock.On("CombinedOutput").Return([]byte("192.111.222.333"), nil)
-			Expect(dwmstatusbar.PIA()).To(Equal("192.111.222.333"))
+			Expect(dwmstatusbar.PIA("")).To(Equal("192.111.222.333"))
 		})
 	})
 
@@ -98,7 +98,7 @@ var TestPIA = Describe("PIA", func() {
 		It("returns waiting for data", func() {
 			execMock.On("NewCommand", "piactl", "get", "vpnip").Return(cmdMock)
 			cmdMock.On("CombinedOutput").Return([]byte(""), fmt.Errorf("oops"))
-			Expect(dwmstatusbar.PIA()).To(Equal("No Data"))
+			Expect(dwmstatusbar.PIA("")).To(Equal("No Data"))
 		})
 	})
 })
@@ -125,7 +125,7 @@ var TestExternalIP = Describe("ExternalIP", func() {
 				),
 			)
 
-			ip := dwmstatusbar.ExternalIP()
+			ip := dwmstatusbar.ExternalIP("")
 			Expect(ip).To(Equal(expectedIP))
 		})
 	})
@@ -140,7 +140,7 @@ var TestExternalIP = Describe("ExternalIP", func() {
 				),
 			)
 
-			ip := dwmstatusbar.ExternalIP()
+			ip := dwmstatusbar.ExternalIP("")
 			Expect(ip).To(Equal(expectedIP))
 		})
 	})
@@ -165,7 +165,7 @@ var TestKeyboardLayout = Describe("KeyboardLayout", func() {
 		It("returns the layout", func() {
 			execMock.On("NewCommand", "xset", "q").Return(cmdMock)
 			cmdMock.On("CombinedOutput").Return([]byte(out), nil)
-			Expect(dwmstatusbar.KeyboardLayout()).To(Equal("US"))
+			Expect(dwmstatusbar.KeyboardLayout(out)).To(Equal("US"))
 		})
 	})
 
@@ -174,7 +174,7 @@ var TestKeyboardLayout = Describe("KeyboardLayout", func() {
 			xsetOut := strings.Replace(out, "LED mask:  00000000", "LED mask:  00001000", 1)
 			execMock.On("NewCommand", "xset", "q").Return(cmdMock)
 			cmdMock.On("CombinedOutput").Return([]byte(xsetOut), nil)
-			Expect(dwmstatusbar.KeyboardLayout()).To(Equal("NO"))
+			Expect(dwmstatusbar.KeyboardLayout(xsetOut)).To(Equal("NO"))
 		})
 	})
 
@@ -182,7 +182,7 @@ var TestKeyboardLayout = Describe("KeyboardLayout", func() {
 		It("returns default layout", func() {
 			execMock.On("NewCommand", "xset", "q").Return(cmdMock)
 			cmdMock.On("CombinedOutput").Return(nil, fmt.Errorf("oops"))
-			Expect(dwmstatusbar.KeyboardLayout()).To(Equal("US"))
+			Expect(dwmstatusbar.KeyboardLayout("")).To(Equal("US"))
 		})
 	})
 })
@@ -206,7 +206,7 @@ var TestDPMS = Describe("DPMS", func() {
 		It("returns DPMS OFF if DPMS is Disabled", func() {
 			execMock.On("NewCommand", "xset", "q").Return(cmdMock)
 			cmdMock.On("CombinedOutput").Return([]byte(out), nil)
-			Expect(dwmstatusbar.DPMS()).To(Equal("DPMS OFF"))
+			Expect(dwmstatusbar.DPMS(out)).To(Equal("DPMS OFF"))
 		})
 	})
 
@@ -216,7 +216,7 @@ var TestDPMS = Describe("DPMS", func() {
 
 			execMock.On("NewCommand", "xset", "q").Return(cmdMock)
 			cmdMock.On("CombinedOutput").Return([]byte(out), nil)
-			Expect(dwmstatusbar.DPMS()).To(Equal("DPMS ON"))
+			Expect(dwmstatusbar.DPMS(out)).To(Equal("DPMS ON"))
 		})
 	})
 
@@ -224,7 +224,7 @@ var TestDPMS = Describe("DPMS", func() {
 		It("returns default DPMS ON", func() {
 			execMock.On("NewCommand", "xset", "q").Return(cmdMock)
 			cmdMock.On("CombinedOutput").Return(nil, fmt.Errorf("oops"))
-			Expect(dwmstatusbar.DPMS()).To(Equal("DPMS ON"))
+			Expect(dwmstatusbar.DPMS("")).To(Equal("DPMS ON"))
 		})
 	})
 })

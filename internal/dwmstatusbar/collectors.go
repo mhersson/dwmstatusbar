@@ -56,7 +56,7 @@ func ExecCommand(command string, args []string, shell bool) string {
 	return strings.TrimSpace(string(out))
 }
 
-func Battery() string {
+func Battery(_ string) string {
 	const (
 		noBattery = "No Battery"
 		charging  = "Charging"
@@ -83,20 +83,20 @@ func Battery() string {
 	return noBattery
 }
 
-func Clock() string {
+func Clock(_ string) string {
 	t := time.Now()
 
 	return t.Format("Monday 2006-01-02 15:04")
 }
 
-func PIA() string {
+func PIA(_ string) string {
 	args := []string{"get", "vpnip"}
 	out := ExecCommand("piactl", args, false)
 
 	return strings.TrimSpace(out)
 }
 
-func ExternalIP() string {
+func ExternalIP(_ string) string {
 	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, ExternalIPURL, nil)
 	if err != nil {
 		Log.Printf("failed to create request %s\n", err.Error())
@@ -125,13 +125,16 @@ func ExternalIP() string {
 	return string(bytes.Trim(body, "\n\r\t "))
 }
 
-func KeyboardLayout() string {
+func Xset(_ string) string {
 	args := []string{"q"}
-	out := ExecCommand("xset", args, false)
 
+	return ExecCommand("xset", args, false)
+}
+
+func KeyboardLayout(xsetOut string) string {
 	layout := "US"
 
-	lines := strings.Split(out, "\n")
+	lines := strings.Split(xsetOut, "\n")
 	for _, line := range lines {
 		if strings.Contains(line, "LED mask") {
 			fields := strings.Fields(line)
@@ -147,13 +150,10 @@ func KeyboardLayout() string {
 	return layout
 }
 
-func DPMS() string {
-	args := []string{"q"}
-	out := ExecCommand("xset", args, false)
-
+func DPMS(xsetOut string) string {
 	dpms := "DPMS ON"
 
-	lines := strings.Split(out, "\n")
+	lines := strings.Split(xsetOut, "\n")
 	for _, line := range lines {
 		if strings.Contains(line, "DPMS is") {
 			fields := strings.Fields(line)
