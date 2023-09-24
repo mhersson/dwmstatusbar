@@ -5,10 +5,16 @@ shell=bash
 
 GO_FUMPT_EXISTS := $(shell command -v gofumpt)
 GOLANGCI_LINT_EXISTS := $(shell command -v golangci-lint)
+UPX_EXISTS := $(shell command -v upx)
 
 LDFLAGS="-s -w"
 
-all: build
+OUT_BIN = dwmstatusbar
+
+# The directory where the binary will be installed
+INSTALL_DIR = /usr/local/bin
+
+all: compress
 
 ##@ General
 
@@ -31,10 +37,10 @@ test: ## run tests
 
 vet:
 ifdef GOLANGCI_LINT_EXISTS
-		@golangci-lint run
+	@golangci-lint run
 else
-		@echo "Using go vet to check the code..."
-		@go vet ./...
+	@echo "Using go vet to check the code..."
+	@go vet ./...
 endif
 
 fmt:
@@ -47,5 +53,18 @@ else
 endif
 
 build: fmt vet test ## build the code
-	@go build -ldflags $(LDFLAGS) -o bin/dwmstatusbar
+	@go build -ldflags $(LDFLAGS) -o bin/${OUT_BIN}
 
+compress: build ## compress the binary
+ifdef UPX_EXISTS
+	@upx -q bin/${OUT_BIN}
+endif
+
+install: ## install the binary
+	@cp bin/$(OUT_BIN) $(INSTALL_DIR)
+
+uninstall: ## uninstall the binary
+	@rm -f $(INSTALL_DIR)/$(OUT_BIN)
+
+clean: ## clean up the project
+	@rm -rf bin
