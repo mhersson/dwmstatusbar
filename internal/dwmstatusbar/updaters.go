@@ -137,23 +137,26 @@ func receive(dataUpdaters map[string]*DataUpdater) {
 
 		for _, name := range printOrder {
 			updater := dataUpdaters[name]
-
-			if name == battery && updater.Data == "No Battery" {
-				updater.Enabled = false
-
+			if updater.Data == "" {
 				continue
 			}
 
-			if name == extip && updater.Data == dataUpdaters[vpn].Data {
-				if updater.Data != "" {
+			switch name {
+			case battery:
+				if updater.Data == "No Battery" {
+					updater.Enabled = false
+
+					continue
+				} else if updater.Data == "Charging" {
+					status += fmt.Sprintf("| 󱐋 %s ", updater.Data)
+				}
+
+			case extip:
+				if updater.Data == dataUpdaters[vpn].Data {
 					updater.Interval = 3600 * time.Second
 				}
 
-				continue
-			}
-
-			// status := fmt.Sprintf("󰌵 %s | 󰌌 %s | 󱇱 %s |  %s", dpms, layout, ipaddress, clock)
-			if updater.Data != "" {
+			default:
 				status += fmt.Sprintf("%s %s ", updater.Prefix, updater.Data)
 			}
 		}
